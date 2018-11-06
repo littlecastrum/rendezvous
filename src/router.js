@@ -1,6 +1,10 @@
-const handlers = require('./handlers');
+const {
+  tokens
+  users
+} = require('./handlers');
 
 // Define a request router
 module.exports = {
-  ping: handlers.ping
+  users
+  tokens
 };

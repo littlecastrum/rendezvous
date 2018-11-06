@@ -6,8 +6,8 @@
 // Dependencies
 const https = require('https');
 const http = require('http');
-const { readFileSync } = require('fs')
-const config = require('./config');
+const { readFileSync } = require('fs') 
+const config = require('./src/config');
 const server = require('./src/server');
 
 // Initialize the HTTP server
