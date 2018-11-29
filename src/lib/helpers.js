@@ -38,12 +38,33 @@ function promisify(fn) {
 function to(promise) {
   return promise
     .then(response => ({ response, error: null }))
-    .catch(error => ({ error, data: null }))
+    .catch(error => ({ error, data: null }));
 }
+
+function isString(val) {
+  return typeof(val) === 'string';
+};
+
+function isBoolean(val) {
+  return typeof(val) === 'boolean';
+};
+
+function createRandomStr(strLength) {
+  if (typeof(strLength) === 'number' && strLength > 0) {
+    const possibleChars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    return Array(strLength).fill(null, 0, strLength).map((char) => {
+      return possibleChars.charAt(Math.floor(Math.random() * possibleChars.length));
+    }).join('');
+  }
+  return false
+};
 
 module.exports = {
   hash,
   parseJsonToObject,
   promisify,
-  to
+  to,
+  isString,
+  isBoolean,
+  createRandomStr
 }

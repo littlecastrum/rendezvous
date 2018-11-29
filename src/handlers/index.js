@@ -1,8 +1,9 @@
 const { errors } = require('../lib');
-const users = require('./users');
 const tokens = require('./tokens');
+const users = require('./users');
 
 module.exports = {
+  notFound: () => Promise.reject(errors.notFound()),
+  tokens,
   users,
-  notFound: () => Promise.reject(errors.notFound())
 };

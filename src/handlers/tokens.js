@@ -1,38 +1,46 @@
 const fs = require('fs');
 const { errors, jsondm } = require('../lib');
-const { hash, to, isBoolean, isString } = require('../lib').helpers;
+const { hash, to, isBoolean, isString, createRandomString } = require('../lib').helpers;
 
-const _users = {}
+const HOUR = 1000 * 60 * 60;
+
+const _tokens = {}
 
 // Users - GET
-// Required params: firstName, lastName, password, phone & tosAgreement
+// Required params: phone, password
 // Optional params: none
 // @TODO Improve the error structure an messages
-_users.post = function(data) {
+_tokens.post = function(data) {
   return new Promise(async (resolve, reject) => {
-    const firstName = verifyPayload(data.payload.firstName);
-    const lastName =  verifyPayload(data.payload.lastName);
     const password =  verifyPayload(data.payload.password);
     const phone =  verifyPhonePayload(data.payload.phone);
-    const tosAgreement = isBoolean(data.payload.tosAgreement) && data.payload.tosAgreement;
-    const userObject = { firstName, lastName, phone, password, tosAgreement };
-    const payloadOK = Object.values(userObject).every(payload => payload !== false);
-    if (payloadOK) {
-      try {
-        const user = await jsondm.fileExists('users', phone);
-        if (user) {
-          reject({ statusCode: 400, payload: { error: 'A user with that phone number already exists' }})
+    console.log(phone)
+    if (phone && password) {
+      const userPromise = await to(jsondm.read('users', phone));
+      if (!userPromise.error && userPromise.response) {
+        const hashedPassword = hash(password);
+        if (userPromise.response.hashedPassword === hashedPassword) {
+          const tokenId = createRandomString(20);
+          const expires = Date.now() + HOUR;
+          const tokenObject = {
+            phone,
+            id: tokenId,
+            expires
+          }
+          const newTokenPromise = await to(jsondm.create('tokens', tokenId, tokenObject));
+          if (newTokenPromise.error) {
+            reject(errors.standard(500, 'Could not create the new token'));
+          } else {
+            resolve({ statusCode: 200, payload: tokenObject })
+          }
         } else {
-          userObject.password = hash(password);
-          const newUser = await jsondm.create('users', phone, userObject);
-          resolve({ statusCode: 200, payload: userObject })
+          reject(errors.standard(400, 'Password did not match the user\'s password'));
         }
-      } catch(err) {
-        console.log(err);
-        reject({ statusCode: 500, payload: { error: 'Could not create the new user' }})
+      } else {
+        reject(errors.standard(400, 'Could not find the specified user'));
       }
     } else {
-      const missingFields = Object.entries(userObject)
+      const missingFields = Object.entries({password, phone})
         .filter(field => field[1] === false)
         .map(field => field[0])
       reject(errors.missingFieldsError(missingFields));
@@ -44,7 +52,7 @@ _users.post = function(data) {
 // Required params: phone
 // Optional params: none
 // @TODO Only let an authenticated users access their object
-_users.get = function(data) {
+_tokens.get = function(data) {
   return new Promise(async (resolve, reject) => {
     const phone = verifyPhonePayload(data.query.phone);
     if (phone) {
@@ -65,7 +73,7 @@ _users.get = function(data) {
 // Required params: phone
 // Optional params: firstName, lastName & password (At least one must be specified)
 // @TODO Only let an authenticated users update their object
-_users.put = function(data) {
+_tokens.put = function(data) {
   return new Promise(async (resolve, reject) => {
     const phone = verifyPhonePayload(data.payload.phone);
     const firstName = verifyPayload(data.payload.firstName);
@@ -101,7 +109,7 @@ _users.put = function(data) {
 // Optional params: none
 // @TODO Only let an authenticated users delete their object
 // @TODO Cleanup (delete) any other data files associated with this user
-_users.delete = function(data) {
+_tokens.delete = function(data) {
   return new Promise(async (resolve, reject) => {
     const phone = verifyPhonePayload(data.query.phone);
     if (phone) {
@@ -123,16 +131,18 @@ _users.delete = function(data) {
   })
 };
 
-function userHandler(data) {
+module.exports = tokenHandler;
+
+function tokenHandler(data) {
   return new Promise(async (resolve, reject) => {
     console.log(`\nINCOMING REQUEST\nMethod: ${data.method}\nQuery: ${JSON.stringify(data.query)}\nPath: ${data.trimmedPath}\nBody: ${JSON.stringify(data.payload)}`);
     const acceptableMethods = ['post', 'get', 'put', 'delete'];
     if (acceptableMethods.includes(data.method)) {
-      const payloadPromise = await to(_users[data.method](data));
-      if (payloadPromise.error) {
-        reject(payloadPromise.error)
-      } else {
-        resolve(payloadPromise.response);
+      try {
+        const payload = await _tokens[data.method](data);
+        resolve(payload);
+      } catch(err) {
+        reject(err)
       }
     } else {
       reject({ statusCode: 405, payload: {} });
@@ -162,5 +172,3 @@ function verifyPhonePayload(payload) {
     ? payload.trim()
     : false;
 }
-
-module.exports = userHandler;
