@@ -1,14 +1,15 @@
 const fs = require('fs');
 const { errors, jsondm } = require('../lib');
 const {
-  hash,
-  to,
-  isBoolean,
-  isString,
+  acceptedHTTPMethod,
   createRandomStr,
+  hash,
+  isString,
+  isBoolean,
+  to,
+  serverMessage,
   verifyPayload,
-  verifyPhonePayload,
-  serverMessage
+  verifyPhonePayload
 } = require('../lib').helpers;
 
 const HOUR = 1000 * 60 * 60;
@@ -23,7 +24,7 @@ _tokens.post = function(data) {
   return new Promise(async (resolve, reject) => {
     const phone =  verifyPhonePayload(data.payload.phone);
     const password =  verifyPayload(data.payload.password);
-     if (phone && password) {
+    if (phone && password) {
       const userPromise = await to(jsondm.read('users', phone));
       if (!userPromise.error && userPromise.response) {
         const hashedPassword = hash(password);
@@ -154,8 +155,7 @@ module.exports = tokenHandler;
 function tokenHandler(data) {
   return new Promise(async (resolve, reject) => {
     console.log(serverMessage(data));
-    const acceptableMethods = ['post', 'get', 'put', 'delete'];
-    if (acceptableMethods.includes(data.method)) {
+    if (acceptedHTTPMethod(data.method)) {
       const payloadPromise = await to(_tokens[data.method](data));
       if (!payloadPromise.error && payloadPromise.response) {
         resolve(payloadPromise.response)

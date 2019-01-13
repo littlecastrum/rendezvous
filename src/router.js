@@ -1,10 +1,12 @@
 const {
-  tokens,
-  users
+  tokenHandler,
+  notFoundHandler,
+  userHandler
 } = require('./handlers');
 
 // Define a request router
 module.exports = {
-  tokens,
-  users
+  tokens: tokenHandler,
+  notFound: notFoundHandler,
+  users: userHandler
 };

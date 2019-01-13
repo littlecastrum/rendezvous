@@ -138,8 +138,7 @@ module.exports = userHandler;
 function userHandler(data) {
   return new Promise(async (resolve, reject) => {
     console.log(serverMessage(data));
-    const acceptableMethods = ['post', 'get', 'put', 'delete'];
-    if (acceptableMethods.includes(data.method)) {
+    if (acceptedHTTPMethod(data.method)) {
       const payloadPromise = await to(_users[data.method](data));
       if (payloadPromise.error) {
         reject(payloadPromise.error)
