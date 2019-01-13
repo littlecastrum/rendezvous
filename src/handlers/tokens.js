@@ -31,11 +31,7 @@ _tokens.post = function(data) {
         if (userPromise.response.password === hashedPassword) {
           const tokenId = createRandomStr(20);
           const expires = Date.now() + HOUR;
-          const tokenObject = {
-            phone,
-            id: tokenId,
-            expires
-          }
+          const tokenObject = { phone, id: tokenId, expires };
           const newTokenPromise = await to(jsondm.create('tokens', tokenId, tokenObject));
           if (!newTokenPromise.error) {
             resolve({ statusCode: 200, payload: tokenObject })
