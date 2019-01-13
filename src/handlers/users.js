@@ -1,7 +1,7 @@
 const fs = require('fs');
 const { errors, jsondm } = require('../lib');
-const 
 const {
+  acceptedHTTPMethod,
   hash,
   to,
   isBoolean,
@@ -57,11 +57,10 @@ _users.get = function(data) {
     const phone = verifyPhonePayload(data.query.phone);
     if (phone) {
       const token = isString(data.headers.token) ? data.headers.token : false;
-      const handlers
-      const { error, response } = await to(jsondm.read('users', phone));
-      if (!error && response) {
-        delete response.hashedPassword
-        resolve({ statusCode: 200, payload: response })
+      const userPromise = await to(jsondm.read('users', phone));
+      if (!userPromise.error && userPromise.response) {
+        delete userPromise.response.password
+        resolve({ statusCode: 200, payload: userPromise.response })
       } else {
         reject(errors.notFound());
       }
