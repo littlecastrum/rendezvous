@@ -17,6 +17,9 @@ function missingFieldsError(fields, optional=false) {
 };
 
 function notFound(message=null) {
+  if (typeof message === 'object' && message.hasOwnProperty('code')) {
+    message = fileErrors(message.code);
+  }
   return {
     statusCode: 404,
     payload: {

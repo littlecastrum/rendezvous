@@ -59,6 +59,27 @@ function createRandomStr(strLength) {
   return false
 };
 
+function verifyPayload(payload, strLength=null) {
+  if (isString(payload)) {
+    if (strLength) {
+      return payload.trim().length === strLength ? payload.trim() : false;
+    } else {
+      return payload.trim().length > 0 ? payload.trim() : false;
+    }
+  }
+  return false;
+}
+
+function verifyPhonePayload(payload) {
+  return isString(payload) && payload.trim().length === 10
+    ? payload.trim()
+    : false;
+}
+
+function serverMessage(data) {
+  return `\nINCOMING REQUEST\nMethod: ${data.method}\nQuery: ${JSON.stringify(data.query)}\nPath: ${data.trimmedPath}\nBody: ${JSON.stringify(data.payload)}`
+}
+
 module.exports = {
   hash,
   parseJsonToObject,
@@ -66,5 +87,8 @@ module.exports = {
   to,
   isString,
   isBoolean,
-  createRandomStr
+  createRandomStr,
+  verifyPayload,
+  verifyPhonePayload,
+  serverMessage
 }

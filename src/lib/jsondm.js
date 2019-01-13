@@ -1,5 +1,5 @@
 /*
- * Library for storing and editing data
+ * Library for storing and editing data - JavaScript Object Notation Data Manager
  *
  */
 

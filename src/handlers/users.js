@@ -1,6 +1,15 @@
 const fs = require('fs');
 const { errors, jsondm } = require('../lib');
-const { hash, to, isBoolean, isString } = require('../lib').helpers;
+const 
+const {
+  hash,
+  to,
+  isBoolean,
+  isString,
+  verifyPayload,
+  verifyPhonePayload,
+  serverMessage
+} = require('../lib').helpers;
 
 const _users = {}
 
@@ -43,11 +52,12 @@ _users.post = function(data) {
 // Users - GET
 // Required params: phone
 // Optional params: none
-// @TODO Only let an authenticated users access their object
 _users.get = function(data) {
   return new Promise(async (resolve, reject) => {
     const phone = verifyPhonePayload(data.query.phone);
     if (phone) {
+      const token = isString(data.headers.token) ? data.headers.token : false;
+      const handlers
       const { error, response } = await to(jsondm.read('users', phone));
       if (!error && response) {
         delete response.hashedPassword
@@ -123,9 +133,11 @@ _users.delete = function(data) {
   })
 };
 
+module.exports = userHandler;
+
 function userHandler(data) {
   return new Promise(async (resolve, reject) => {
-    console.log(`\nINCOMING REQUEST\nMethod: ${data.method}\nQuery: ${JSON.stringify(data.query)}\nPath: ${data.trimmedPath}\nBody: ${JSON.stringify(data.payload)}`);
+    console.log(serverMessage(data));
     const acceptableMethods = ['post', 'get', 'put', 'delete'];
     if (acceptableMethods.includes(data.method)) {
       const payloadPromise = await to(_users[data.method](data));
@@ -150,17 +162,3 @@ function updateUserObject(newValues, user) {
     tosAgreement: user.tosAgreement,
   }
 };
-
-function verifyPayload(payload) {
-  return isString(payload) && payload.trim().length > 0
-    ? payload.trim()
-    : false;
-}
-
-function verifyPhonePayload(payload) {
-  return isString(payload) && payload.trim().length === 10
-    ? payload.trim()
-    : false;
-}
-
-module.exports = userHandler;
