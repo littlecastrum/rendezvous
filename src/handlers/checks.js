@@ -14,7 +14,7 @@ const {
 
 const HOUR = 1000 * 60 * 60;
 
-const _tokens = {
+const _checks = {
   post: postFn,
   get: getFn,
   put: putFn,
@@ -23,15 +23,15 @@ const _tokens = {
 }
 
 module.exports = {
-  tokenHandler,
-  _tokens
+  checkHandler,
+  _checks
 };
 
-function tokenHandler(data) {
+function checkHandler(data) {
   return new Promise(async (resolve, reject) => {
     console.log(serverMessage(data));
     if (acceptedHTTPMethod(data.method)) {
-      const payloadPromise = await to(_tokens[data.method](data));
+      const payloadPromise = await to(_checks[data.method](data));
       if (!payloadPromise.error && payloadPromise.response) {
         resolve(payloadPromise.response)
       } else {
@@ -43,10 +43,10 @@ function tokenHandler(data) {
   })
 }
 
-// Tokens - POST
-// Required params: phone, password
+
+// Checks - POST
+// Required params: protocol, url, method, sucessCodes, timeoutSeconds
 // Optional params: none
-// @TODO Improve the error structure an messages
 function postFn(data) {
   return new Promise(async (resolve, reject) => {
     const phone =  verifyPhonePayload(data.payload.phone);
@@ -80,7 +80,7 @@ function postFn(data) {
   })
 };
 
-// Tokens - GET
+// Checks - GET
 // Required params: id
 // Optional params: none
 function getFn(data) {
@@ -99,7 +99,7 @@ function getFn(data) {
   })
 };
 
-// Tokens - PUT
+// Checks - PUT
 // Required params: id, extend
 // Optional params: none
 function putFn(data) {
@@ -132,7 +132,7 @@ function putFn(data) {
   })
 };
 
-// Tokens - DELETE
+// Checks - DELETE
 // Required params: id
 // Optional params: none
 function deleteFn(data) {
@@ -154,20 +154,4 @@ function deleteFn(data) {
       reject(errors.missingFieldsError(['id']));
     }
   })
-};
-
-// Tokens (Internal function)
-// Required params: id, phone
-// Optional params: none
-async function verifyToken(id, phone) {
-  const { error, response } = await to(jsondm.read('tokens', id));
-  if (!error && response) {
-    if (response.phone === phone && response.expires > Date.now()) {
-      return true;
-    } else {
-      return false;
-    }
-  } else {
-    return false;
-  }
 };

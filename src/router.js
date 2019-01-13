@@ -1,4 +1,5 @@
 const {
+  checkHandler,
   tokenHandler,
   notFoundHandler,
   userHandler
@@ -6,6 +7,7 @@ const {
 
 // Define a request router
 module.exports = {
+  checks: checkHandler,
   tokens: tokenHandler,
   notFound: notFoundHandler,
   users: userHandler
