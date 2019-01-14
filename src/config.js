@@ -9,7 +9,7 @@ const staging = {
   httpsPort: 3001,
   env: 'staging',
   hashingSecret: 'secret',
-  'maxChecks': 5
+  maxChecks: 5
 };
 
 // Production enviroment
@@ -18,7 +18,7 @@ const production = {
   httpsPort:  5001,
   env: 'production',
   hashingSecret: 'secret',
-  'maxChecks': 5
+  maxChecks: 5
 };
 
 // Container for all the enviroments

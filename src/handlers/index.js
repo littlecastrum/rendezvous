@@ -1,10 +1,10 @@
 const { errors } = require('../lib');
-const checkHandler = require('./check');
-const tokenHandler = require('./tokens');
+const checkHandler = require('./checks');
+const { tokenHandler } = require('./tokens');
 const userHandler = require('./users');
 
 module.exports = {
-  checkHandler
+  checkHandler,
   notFoundHandler: () => Promise.reject(errors.notFound()),
   tokenHandler,
   userHandler,

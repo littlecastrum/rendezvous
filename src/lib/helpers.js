@@ -37,9 +37,17 @@ function isString(val) {
   return typeof(val) === 'string';
 };
 
+function isNumber(val) {
+  return typeof(val) === 'number';
+};
+
 function isBoolean(val) {
   return typeof(val) === 'boolean';
 };
+
+function isArray(val) {
+  return typeof(val) === 'object' && val instanceof Array;
+}
 
 function parseJsonToObject(str) {
   try {
@@ -85,16 +93,38 @@ function verifyPhonePayload(payload) {
     : false;
 }
 
+function verifyPayloadWithOptions(payload, options) {
+  return isString(payload) && options.includes(payload) 
+    ? payload 
+    : false;
+}
+
+function verifyObjectArrayPayload(payload) {
+  return isArray(payload) && payload.length > 0
+    ? payload
+    : false;
+}
+
+function verifyTimeoutPayload(payload) {
+  return isNumber(payload) && payload % 1 === 0 && payload >= 1 && payload <= 5
+    ? payload
+    : false;
+}
+
 module.exports = {
   acceptedHTTPMethod,
   createRandomStr,
   hash,
   isString,
   isBoolean,
+  isArray,
   parseJsonToObject,
   promisify,
   to,
   serverMessage,
   verifyPayload,
-  verifyPhonePayload
+  verifyPhonePayload,
+  verifyPayloadWithOptions,
+  verifyObjectArrayPayload,
+  verifyTimeoutPayload
 }

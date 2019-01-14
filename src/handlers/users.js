@@ -4,6 +4,7 @@ const {
   acceptedHTTPMethod,
   hash,
   to,
+  isArray,
   isBoolean,
   isString,
   verifyPayload,
@@ -61,7 +62,7 @@ function postFn(data) {
           resolve({ statusCode: 200, payload: userObject })
         }
       } catch(err) {
-        reject(errors.standard(500, 'Could not create the new user'));
+        reject(errors.standard(500, `Could not create the new user. ${err}`));
       }
     } else {
       const missingFields = Object.entries(userObject)
@@ -80,8 +81,8 @@ function getFn(data) {
     const phone = verifyPhonePayload(data.query.phone);
     if (phone) {
       const token = isString(data.headers.token) ? data.headers.token : false;
-      const tokenIsValid = await to(_tokens.verifyToken(token, phone));
-      if (tokenIsValid.response) {
+      const tokenIsValid = await _tokens.verifyToken(token, phone);
+      if (tokenIsValid) {
         const userPromise = await to(jsondm.read('users', phone));
         if (!userPromise.error && userPromise.response) {
           delete userPromise.response.password
@@ -109,7 +110,8 @@ function putFn(data) {
     const password =  verifyPayload(data.payload.password);
     if (phone) {
       if (firstName || lastName || password) {
-        const tokenIsValid = await to(_tokens.verifyToken(token, phone));
+        const token = isString(data.headers.token) ? data.headers.token : false;
+        const tokenIsValid = await _tokens.verifyToken(token, phone);
         if (tokenIsValid) {
           const userPromise = await to(jsondm.read('users', phone));
           if (!userPromise.error && userPromise.response) {
@@ -140,18 +142,40 @@ function putFn(data) {
 // Users - DELETE
 // Required params: phone
 // Optional params: none
-// @TODO Cleanup (delete) any other data files associated with this user
 function deleteFn(data) {
   return new Promise(async (resolve, reject) => {
     const phone = verifyPhonePayload(data.query.phone);
     if (phone) {
-      const tokenIsValid = await to(_tokens.verifyToken(token, phone));
+      const token = isString(data.headers.token) ? data.headers.token : false;
+      const tokenIsValid = await _tokens.verifyToken(token, phone);
       if (tokenIsValid) {
         const userPromise = await to(jsondm.read('users', phone));
         if (!userPromise.error && userPromise.response) {
           const { error } = await to(jsondm.remove('users', phone))
           if (!error) {
-            resolve({ statusCode: 200, payload: {} })
+            const userData = userPromise.response;
+            const userChecks = isArray(userData.checks) ? userData.checks : [];
+            const checkToDelete = userChecks.length;
+            if (checkToDelete > 0) {
+              let checksDeleted = 0;
+              let deletionErrors = false;
+              userChecks.forEach(async (checkId) => {
+                const { error } = await to(jsondm.remove('checks', checkId));
+                if (error && !deletionErrors) {
+                  deletionErrors = true;
+                }
+                checksDeleted++;
+                if (checksDeleted === checkToDelete) {
+                  if (!deletionErrors) {
+                    resolve({ statusCode: 200, payload: {} })
+                  } else {
+                    reject(errors.standard(500, 'Errors encountered deleting checks related to the user'));
+                  }
+                }
+              })
+            } else {
+              resolve({ statusCode: 200, payload: {} })
+            }
           } else {
             console.log(error);
             reject(errors.standard(500, 'Could not delete the user, something went wrong'));
