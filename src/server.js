@@ -1,21 +1,29 @@
+/*
+ *
+ *
+ */
+
+// Dependencies
+const https = require('https');
+const http = require('http');
+const path = require('path');
+const { readFileSync } = require('fs') 
 const { parse } = require('url');
 const { StringDecoder } = require('string_decoder');
+const { helpers } = require('./lib');
 const handlers = require('./handlers');
 const router = require('./router');
-const { helpers } = require('./lib');
+const config = require('./config');
 
-// Unified logic for http and https servers
-module.exports = (req, res) => {
-  // Get the method, headers & URL
+const serverOptions = {
+  key: readFileSync(path.join(__dirname, '/../https/key.pem')),
+  cert: readFileSync(path.join(__dirname, '/../https/cert.pem'))
+};
+
+function unifiedServer(req, res) {
   const { method, headers, url } = req;
-
-  // Get the parsed URL
   const { pathname, query } = parse(url, true);
-
-  // Get the path
   const trimmedPath = pathname.replace(/^\/+|\/+$/g, '');
-
-  // Get the payload, if any
   const decoder = new StringDecoder('utf-8');
   let buffer = '';
 
@@ -53,4 +61,28 @@ module.exports = (req, res) => {
 
     console.log(`\nSERVER RESPONSE\nStatus: ${statusCode}\nPayload: ${payloadString}`);
   });
+}; 
+
+function init(servers) {
+  servers.forEach(({server, port}) => {
+    server.listen(port, () => {
+      console.log(`The server is listening on port ${port}`);
+    })
+  })
+};
+
+const availableServers = [
+  {
+    server: http.createServer((req, res) => unifiedServer(req, res)),
+    port: config.httpPort
+  },
+  {
+    server: https.createServer(serverOptions, (req, res) => unifiedServer(req, res)),
+    port: config.httpsPort
+  }
+];
+
+module.exports = {
+  availableServers,
+  init
 };

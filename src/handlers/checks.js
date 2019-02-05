@@ -1,6 +1,6 @@
 const fs = require('fs');
 const config = require('../config');
-const { errors, jsondm } = require('../lib');
+const { errors, jsondm, helpers } = require('../lib');
 const {
   acceptedHTTPMethod,
   createRandomStr,
@@ -15,7 +15,7 @@ const {
   verifyPayloadWithOptions,
   verifyObjectArrayPayload,
   verifyTimeoutPayload
-} = require('../lib').helpers;
+} = helpers;
 const { _tokens } = require('./tokens');
 
 const HOUR = 1000 * 60 * 60;

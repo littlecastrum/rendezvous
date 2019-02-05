@@ -15,6 +15,7 @@ const closeFile = promisify(fs.close);
 const readFile = promisify(fs.readFile);
 const truncateFile = promisify(fs.ftruncate);
 const unlinkFile = promisify(fs.unlink);
+const readDir = promisify(fs.readdir);
 
 function create(dir, file, data) {
   return new Promise(async(resolve, reject) => {
@@ -72,10 +73,23 @@ function fileExists(dir, file) {
   return fs.existsSync(`${baseDir}${dir}/${file}.json`);
 }
 
+function list(dir) {
+  return new Promise(async (resolve, reject) => {
+    const { response, error } = await to(readDir(`${baseDir}${dir}/`));
+    if (!error && response && response.length > 0) {
+      const trimmedFileNames = data.map((fileName) => fileName.replace('.json', ''))
+      resolve(trimmedFileNames)
+    } else {
+      resolve(response)
+    }
+  })
+}
+
 module.exports = {
   create,
+  fileExists,
+  list,
   read,
-  update,
   remove,
-  fileExists
+  update
 }

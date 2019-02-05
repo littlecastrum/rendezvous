@@ -76,6 +76,10 @@ function serverMessage(data) {
   return `\nINCOMING REQUEST\nMethod: ${data.method}\nQuery: ${JSON.stringify(data.query)}\nPath: ${data.trimmedPath}\nBody: ${JSON.stringify(data.payload)}`
 }
 
+function verifyMessage(msg) {
+  return isString(msg) && msg.trim().length > 0 && msg.trim().length <= 1600 ? msg.trim() : false;
+}
+
 function verifyPayload(payload, strLength=null) {
   if (isString(payload)) {
     if (strLength) {
@@ -93,10 +97,10 @@ function verifyPhonePayload(payload) {
     : false;
 }
 
-function verifyPayloadWithOptions(payload, options) {
+function verifyPayloadWithOptions(payload, options, default=false) {
   return isString(payload) && options.includes(payload) 
     ? payload 
-    : false;
+    : default;
 }
 
 function verifyObjectArrayPayload(payload) {
@@ -111,6 +115,10 @@ function verifyTimeoutPayload(payload) {
     : false;
 }
 
+function loopFn(fn, time) {
+  setInterval(() => fn(), time)
+};
+
 module.exports = {
   acceptedHTTPMethod,
   createRandomStr,
@@ -118,6 +126,7 @@ module.exports = {
   isString,
   isBoolean,
   isArray,
+  loopFn,
   parseJsonToObject,
   promisify,
   to,

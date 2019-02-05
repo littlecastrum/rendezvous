@@ -9,7 +9,12 @@ const staging = {
   httpsPort: 3001,
   env: 'staging',
   hashingSecret: 'secret',
-  maxChecks: 5
+  maxChecks: 5,
+  twilio: {
+    accountSid: 'ACf807ea0630ffb691df7b7d234a5fb6ef',
+    authToken: '65531ab6018116febee6ba2eec348b2b',
+    fromPhone: '+12563872398'
+  }
 };
 
 // Production enviroment
@@ -18,7 +23,12 @@ const production = {
   httpsPort:  5001,
   env: 'production',
   hashingSecret: 'secret',
-  maxChecks: 5
+  maxChecks: 5,
+  twilio: {
+    accountSid: '',
+    authToken: '',
+    fromPhone: ''
+  }
 };
 
 // Container for all the enviroments
